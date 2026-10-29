@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f4">
+  <title>Verify your email TEAM 10 </title>
+  <title1> JAVA MINI PROJECT </title1>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17231d;
+      --muted: #78827b;
+      --green: #245c43;
+      --green-dark: #194733;
+      --line: #e6e9e3;
+      --paper: #fff;
+      --canvas: #f6f7f4;
+      --serif: Georgia, "Times New Roman", serif;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; min-height: 100vh; color: var(--ink); background: var(--canvas); }
+    .page { min-height: 100vh; display: grid; grid-template-columns: minmax(340px, .92fr) 1.08fr; }
+    .story { position: relative; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; min-height: 100vh; padding: 38px clamp(28px, 5vw, 72px) 30px; color: #f3f4e9; background: #1d392c; }
+    .story::before, .story::after { position: absolute; content: ""; pointer-events: none; border: 1px solid rgb(226 236 220 / 10%); border-radius: 50%; }
+    .story::before { width: 660px; height: 660px; top: 21%; left: -52%; }
+    .story::after { width: 470px; height: 470px; top: 32%; left: -34%; }
+    .brand, .story-copy, .story-bottom { position: relative; z-index: 1; }
+    .brand { display: flex; align-items: center; gap: 11px; font-size: 15px; font-weight: 650; letter-spacing: -.03em; }
+    .brand-mark { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid rgb(244 244 230 / 32%); border-radius: 11px; }
+    .brand-mark svg { width: 19px; height: 19px; }
+    .story-copy { max-width: 470px; margin: auto 0; padding: 72px 0; }
+    .eyebrow { display: flex; align-items: center; gap: 9px; margin-bottom: 22px; color: #b6c8b7; font-size: 11px; font-weight: 650; letter-spacing: .16em; text-transform: uppercase; }
+    .eyebrow::before { width: 21px; height: 1px; content: ""; background: #aac4ac; }
+    h1 { max-width: 450px; margin: 0; font-family: var(--serif); font-size: clamp(45px, 5.2vw, 72px); font-weight: 400; letter-spacing: -.055em; line-height: 1.04; }
+    h1 em { color: #b9d1b2; font-weight: 400; }
+    .story-description { max-width: 360px; margin: 25px 0 0; color: #c1ccc2; font-size: 14px; line-height: 1.8; }
+    .trust-row { display: flex; align-items: center; gap: 10px; color: #c6d1c5; font-size: 11px; }
+    .trust-row svg { width: 16px; height: 16px; color: #bdd3b2; }
+    .main { display: grid; min-height: 100vh; place-items: center; padding: 42px clamp(24px, 6vw, 88px); }
+    .auth { width: min(100%, 430px); }
+    .mobile-brand { display: none; }
+    .step-label { margin: 0 0 13px; color: var(--green); font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    h2 { margin: 0; font-family: var(--serif); font-size: clamp(34px, 3.4vw, 43px); font-weight: 400; letter-spacing: -.045em; line-height: 1.16; }
+    .form-intro { margin: 12px 0 30px; color: var(--muted); font-size: 14px; line-height: 1.75; }
+    label { display: block; margin-bottom: 9px; font-size: 12px; font-weight: 650; }
+    .input-wrap { position: relative; }
+    .input-wrap svg { position: absolute; top: 50%; left: 15px; width: 18px; height: 18px; color: #8b968d; transform: translateY(-50%); pointer-events: none; }
+    input { width: 100%; height: 52px; padding: 0 15px 0 45px; border: 1px solid #dfe4dc; border-radius: 8px; outline: none; color: var(--ink); background: #fff; font: inherit; font-size: 14px; transition: border-color .2s, box-shadow .2s; }
+    input::placeholder { color: #a4aca5; }
+    input:focus { border-color: #70927d; box-shadow: 0 0 0 3px rgb(65 112 83 / 11%); }
+    .code-input { padding-left: 15px; font-size: 23px; font-weight: 600; letter-spacing: .45em; text-align: center; }
+    button { font: inherit; }
+    .primary { display: flex; width: 100%; height: 51px; align-items: center; justify-content: center; gap: 9px; margin-top: 16px; border: 0; border-radius: 8px; color: #fff; background: var(--green); font-size: 13px; font-weight: 650; cursor: pointer; transition: background .2s, transform .2s; }
+    .primary:hover { background: var(--green-dark); }
+    .primary:active { transform: translateY(1px); }
+    .primary:disabled { cursor: wait; opacity: .7; }
+    .primary svg { width: 16px; height: 16px; }
+    .message { min-height: 22px; margin: 13px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .message.error { color: #a53d35; }
+    .message.success { color: #286c49; }
+    .form-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; color: var(--muted); font-size: 12px; }
+    .text-button { padding: 5px 0; border: 0; color: var(--green); background: none; font-size: 12px; font-weight: 650; cursor: pointer; }
+    .text-button:disabled { color: #9da69f; cursor: default; }
+    .divider { display: flex; align-items: center; gap: 13px; margin: 30px 0 20px; color: #a1a8a2; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+    .divider::before, .divider::after { height: 1px; flex: 1; content: ""; background: var(--line); }
+    .secure-note { display: flex; align-items: flex-start; gap: 11px; padding: 14px; border: 1px solid #e8ebe5; border-radius: 8px; background: rgb(255 255 255 / 68%); }
+    .secure-note svg { width: 17px; height: 17px; flex: 0 0 auto; margin-top: 1px; color: var(--green); }
+    .secure-note p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
+    .secure-note strong { color: #37463b; font-weight: 650; }
+    .footer { margin-top: 42px; color: #9aa29b; font-size: 10px; line-height: 1.7; text-align: center; }
+    [hidden] { display: none !important; }
+    @media (max-width: 760px) {
+      .page { display: block; }
+      .story { display: none; }
+      .main { min-height: 100vh; padding: 32px 24px; }
+      .mobile-brand { display: flex; margin-bottom: 58px; color: var(--green); }
+      .mobile-brand .brand-mark { border-color: #dce5dc; }
+      .auth { width: min(100%, 430px); }
+    }
+    @media (max-width: 420px) {
+      .main { padding: 25px 21px; }
+      .mobile-brand { margin-bottom: 48px; }
+      .form-intro { margin-bottom: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <aside class="story" aria-label="About secure verification">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 19 6v5.3c0 4.5-2.9 7.7-7 9.2-4.1-1.5-7-4.7-7-9.2V6l7-2.5Z" stroke="currentColor" stroke-width="1.5"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span>northstar<span style="font-weight:400;opacity:.72"> / identity</span></span>
+      </div>
+      <div class="story-copy">
+        <p class="eyebrow">A safer sign-in</p>
+        <h1>One small step.<br><em>More peace of mind.</em></h1>
+        <p class="story-description">Confirm it’s really you with a one-time code sent straight to your inbox. Simple, private, and yours alone.</p>
+      </div>
+      <div class="trust-row">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.5 19 6v5.3c0 4.5-2.9 7.7-7 9.2-4.1-1.5-7-4.7-7-9.2V6l7-2.5Z" stroke="currentColor" stroke-width="1.5"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Your information stays protected
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="auth" aria-labelledby="heading">
+        <div class="mobile-brand brand">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 19 6v5.3c0 4.5-2.9 7.7-7 9.2-4.1-1.5-7-4.7-7-9.2V6l7-2.5Z" stroke="currentColor" stroke-width="1.5"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span>northstar<span style="font-weight:400;opacity:.65"> / identity</span></span>
+        </div>
+
+        <p class="step-label" id="step-label">Step 1 of 2&nbsp; · &nbsp;Email confirmation</p>
+        <h2 id="heading">Verify your email</h2>
+        <p class="form-intro" id="intro">Enter the email address connected to your account. We’ll send you a secure, one-time code.</p>
+
+        <form id="email-form">
+          <label for="email">Email address</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="m5 7 7 5.5L19 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" maxlength="254" required>
+          </div>
+          <button class="primary" id="send-button" type="submit">
+            <span>Send verification code</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </form>
+
+        <form id="code-form" hidden>
+          <label for="code">6-digit verification code</label>
+          <input class="code-input" id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" pattern="[0-9]{6}" maxlength="6" required>
+          <button class="primary" id="verify-button" type="submit">
+            <span>Verify email</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="form-foot">
+            <span id="resend-note">Code expires in 5 minutes.</span>
+            <button class="text-button" id="resend-button" type="button" disabled>Resend code</button>
+          </div>
+        </form>
+        <p class="message" id="message" role="status" aria-live="polite"></p>
+
+        <div class="divider">Your privacy matters</div>
+        <div class="secure-note">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <p><strong>Your code is private.</strong> It expires in 5 minutes and can only be used once. Never share it with anyone.</p>
+        </div>
+        <p class="footer">Protected with one-time email verification.<br>Having trouble? Check your spam or junk folder.</p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const emailForm = document.querySelector("#email-form");
+    const codeForm = document.querySelector("#code-form");
+    const emailInput = document.querySelector("#email");
+    const codeInput = document.querySelector("#code");
+    const message = document.querySelector("#message");
+    const heading = document.querySelector("#heading");
+    const intro = document.querySelector("#intro");
+    const stepLabel = document.querySelector("#step-label");
+    const sendButton = document.querySelector("#send-button");
+    const verifyButton = document.querySelector("#verify-button");
+    const resendButton = document.querySelector("#resend-button");
+    const resendNote = document.querySelector("#resend-note");
+    let activeEmail = "";
+    let resendTimer;
+    let expiryTimer;
+    let remaining = 60;
+
+    function showMessage(text, kind = "") {
+      message.textContent = text;
+      message.className = `message ${kind}`;
+    }
+
+    async function request(path, values) {
+      const body = new URLSearchParams(values);
+      const response = await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.message || "Something went wrong.");
+      return result;
+    }
+
+    function startResendTimer() {
+      clearInterval(resendTimer);
+      remaining = 60;
+      resendButton.disabled = true;
+      resendButton.textContent = `Resend in ${remaining}s`;
+      resendTimer = setInterval(() => {
+        remaining -= 1;
+        if (remaining <= 0) {
+          clearInterval(resendTimer);
+          resendButton.disabled = false;
+          resendButton.textContent = "Resend code";
+          return;
+        }
+        resendButton.textContent = `Resend in ${remaining}s`;
+      }, 1000);
+    }
+
+    async function sendCode() {
+      sendButton.disabled = true;
+      sendButton.querySelector("span").textContent = "Sending securely…";
+      showMessage("");
+      try {
+        const result = await request("/api/send", { email: emailInput.value.trim() });
+        activeEmail = emailInput.value.trim();
+        emailForm.hidden = true;
+        codeForm.hidden = false;
+        heading.textContent = "Check your inbox";
+        intro.textContent = `We sent a 6-digit verification code to ${activeEmail}. Enter it below to confirm your email.`;
+        stepLabel.textContent = "Step 2 of 2  ·  Enter your code";
+        codeInput.value = "";
+        codeInput.focus();
+        showMessage(result.message, "success");
+        startResendTimer();
+        clearTimeout(expiryTimer);
+        expiryTimer = setTimeout(() => {
+          resendNote.textContent = "Your code may have expired.";
+        }, 5 * 60 * 1000);
+      } catch (error) {
+        showMessage(error.message, "error");
+      } finally {
+        sendButton.disabled = false;
+        sendButton.querySelector("span").textContent = "Send verification code";
+      }
+    }
+
+    emailForm.addEventListener("submit", event => {
+      event.preventDefault();
+      if (emailForm.reportValidity()) sendCode();
+    });
+
+    codeForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (!codeForm.reportValidity()) return;
+      verifyButton.disabled = true;
+      verifyButton.querySelector("span").textContent = "Verifying…";
+      showMessage("");
+      try {
+        const result = await request("/api/verify", { email: activeEmail, code: codeInput.value.trim() });
+        clearInterval(resendTimer);
+        clearTimeout(expiryTimer);
+        heading.textContent = "You’re all set";
+        intro.textContent = "Your email has been verified successfully. You can safely close this page.";
+        stepLabel.textContent = "Verification complete";
+        codeForm.hidden = true;
+        showMessage(result.message, "success");
+      } catch (error) {
+        showMessage(error.message, "error");
+        codeInput.focus();
+        codeInput.select();
+      } finally {
+        verifyButton.disabled = false;
+        verifyButton.querySelector("span").textContent = "Verify email";
+      }
+    });
+
+    resendButton.addEventListener("click", sendCode);
+    emailInput.addEventListener("input", () => {
+      const nextEmail = emailInput.value.trim();
+      if (activeEmail && nextEmail.toLowerCase() !== activeEmail.toLowerCase()) {
+        activeEmail = "";
+        codeForm.hidden = true;
+        emailForm.hidden = false;
+        heading.textContent = "Verify your email";
+        intro.textContent = "Enter the email address connected to your account. We’ll send you a secure, one-time code.";
+        stepLabel.textContent = "Step 1 of 2  ·  Email confirmation";
+        showMessage("");
+      }
+    });
+  </script>
+</body>
+</html>
