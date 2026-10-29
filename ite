@@ -1,0 +1,8 @@
+ .gitignore                                         |   7 [32m+[m
+ pom.xml                                            |  68 [32m+++[m
+ run.bat                                            |  27 [32m++[m
+ run.ps1                                            |  21 [32m+[m
+ .../emailauth/EmailAuthenticationApp.java          | 477 [32m+++++++++++++++++++++[m
+ .../miniproject/emailauth/EmailOtpWebServer.java   | 331 [32m++++++++++++++[m
+ src/main/resources/web/index.html                  | 286 [32m++++++++++++[m
+ 7 files changed, 1217 insertions(+)
