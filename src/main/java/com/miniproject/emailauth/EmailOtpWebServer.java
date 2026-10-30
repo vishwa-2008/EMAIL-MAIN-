@@ -68,6 +68,13 @@ public final class EmailOtpWebServer {
 
         String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
+
+        if ("/favicon.ico".equals(path)) {
+            exchange.sendResponseHeaders(204, -1);
+            exchange.close();
+            return;
+        }
+
         if ("/api/send".equals(path) && "POST".equals(method)) {
             sendCode(exchange);
         } else if ("/api/verify".equals(path) && "POST".equals(method)) {
@@ -144,8 +151,9 @@ public final class EmailOtpWebServer {
             sendEmail(credentials, email, code);
         } catch (Exception ex) {
             lastSent.remove(email, reservation[0]);
-            System.err.println("Unable to send verification email: " + ex.getClass().getSimpleName());
-            sendJson(exchange, 502, false, "Could not send the email. Check the SMTP settings and try again.");
+            System.err.println("Unable to send verification email: " + ex.getMessage());
+            ex.printStackTrace();
+            sendJson(exchange, 502, false, "Could not send the email: " + getFriendlyErrorMessage(ex));
             return;
         }
 
@@ -241,12 +249,30 @@ public final class EmailOtpWebServer {
     }
 
     private static void sendEmail(Credentials credentials, String recipient, String code) throws Exception {
+        try {
+            sendEmailViaPort(credentials, recipient, code, "587", true);
+        } catch (Exception ex) {
+            System.err.println("SMTP port 587 failed (" + ex.getMessage() + "), retrying via port 465 (SSL)...");
+            sendEmailViaPort(credentials, recipient, code, "465", false);
+        }
+    }
+
+    private static void sendEmailViaPort(Credentials credentials, String recipient, String code,
+                                         String port, boolean useStartTls) throws Exception {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.host", "smtp.gmail.com");
-        props.put("mail.smtp.port", "587");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.starttls.required", "true");
+        props.put("mail.smtp.port", port);
+        if (useStartTls) {
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.starttls.required", "true");
+        } else {
+            props.put("mail.smtp.ssl.enable", "true");
+            props.put("mail.smtp.socketFactory.port", port);
+            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        }
+        props.put("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
+        props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
         props.put("mail.smtp.connectiontimeout", "10000");
         props.put("mail.smtp.timeout", "10000");
         props.put("mail.smtp.writetimeout", "10000");
@@ -269,6 +295,15 @@ public final class EmailOtpWebServer {
         Transport.send(message);
     }
 
+    private static String getFriendlyErrorMessage(Exception ex) {
+        String msg = ex.getMessage();
+        if (msg == null || msg.isBlank()) return ex.getClass().getSimpleName();
+        if (msg.contains("535-5.7.8") || msg.toLowerCase(Locale.ROOT).contains("username and password not accepted")) {
+            return "Gmail authentication failed. Please verify your Google App Password.";
+        }
+        return msg;
+    }
+
     private static Credentials loadCredentials() {
         String email = System.getenv("GMAIL_ADDRESS");
         String password = System.getenv("GMAIL_APP_PASSWORD");
@@ -287,7 +322,13 @@ public final class EmailOtpWebServer {
                     java.nio.file.Path.of("config.properties"))) {
                 properties.load(input);
             } catch (IOException ignored) {
-                return null;
+            }
+        }
+        if (properties.isEmpty()) {
+            try (InputStream input = java.nio.file.Files.newInputStream(
+                    java.nio.file.Path.of(".env"))) {
+                properties.load(input);
+            } catch (IOException ignored) {
             }
         }
 
