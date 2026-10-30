@@ -13,7 +13,11 @@ import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.net.URLDecoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -119,7 +123,7 @@ public final class EmailOtpWebServer {
         Credentials credentials = loadCredentials();
         if (credentials == null) {
             sendJson(exchange, 503, false,
-                    "Email is not configured yet. Add GMAIL_ADDRESS and GMAIL_APP_PASSWORD to the server environment.");
+                    "Email service is not configured. Add BREVO_API_KEY or GMAIL credentials in settings.");
             return;
         }
 
@@ -241,6 +245,7 @@ public final class EmailOtpWebServer {
     }
 
     private static String jsonEscape(String value) {
+        if (value == null) return "";
         return value.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n")
@@ -249,11 +254,57 @@ public final class EmailOtpWebServer {
     }
 
     private static void sendEmail(Credentials credentials, String recipient, String code) throws Exception {
+        if (credentials.isBrevo()) {
+            sendBrevoEmail(credentials.brevoApiKey(), credentials.email(), recipient, code);
+            return;
+        }
+
         try {
             sendEmailViaPort(credentials, recipient, code, "587", true);
         } catch (Exception ex) {
             System.err.println("SMTP port 587 failed (" + ex.getMessage() + "), retrying via port 465 (SSL)...");
             sendEmailViaPort(credentials, recipient, code, "465", false);
+        }
+    }
+
+    private static void sendBrevoEmail(String apiKey, String senderEmail, String recipient, String code) throws Exception {
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+
+        String sender = (senderEmail != null && !senderEmail.isBlank())
+                ? senderEmail.trim()
+                : "baddamvishwa445@gmail.com";
+
+        String jsonPayload = "{"
+                + "\"sender\":{\"name\":\"Northstar Verification\",\"email\":\"" + jsonEscape(sender) + "\"},"
+                + "\"to\":[{\"email\":\"" + jsonEscape(recipient) + "\"}],"
+                + "\"subject\":\"Your verification code\","
+                + "\"htmlContent\":\"<div style=\\\"font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;border:1px solid #e2e8f0;border-radius:12px\\\">"
+                + "<h2 style=\\\"color:#194733;margin-top:0\\\">Your Verification Code</h2>"
+                + "<p style=\\\"font-size:15px;color:#334155\\\">Use the one-time code below to verify your email address:</p>"
+                + "<div style=\\\"font-size:32px;font-weight:bold;letter-spacing:6px;color:#245c43;padding:16px 0;text-align:center;background:#f0f7f3;border-radius:8px;margin:20px 0\\\">"
+                + jsonEscape(code)
+                + "</div>"
+                + "<p style=\\\"font-size:13px;color:#64748b\\\">This code is valid for 5 minutes. Do not share it with anyone.</p>"
+                + "</div>\""
+                + "}";
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                .header("accept", "application/json")
+                .header("api-key", apiKey)
+                .header("content-type", "application/json")
+                .timeout(Duration.ofSeconds(15))
+                .POST(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        int statusCode = response.statusCode();
+        if (statusCode < 200 || statusCode >= 300) {
+            String body = response.body();
+            System.err.println("Brevo API error (" + statusCode + "): " + body);
+            throw new IOException("Brevo API HTTP " + statusCode + ": " + body);
         }
     }
 
@@ -301,15 +352,22 @@ public final class EmailOtpWebServer {
         if (msg.contains("535-5.7.8") || msg.toLowerCase(Locale.ROOT).contains("username and password not accepted")) {
             return "Gmail authentication failed. Please verify your Google App Password.";
         }
+        if (msg.toLowerCase(Locale.ROOT).contains("unauthorized") || msg.contains("401")) {
+            return "Brevo authentication failed. Check your BREVO_API_KEY in Render settings.";
+        }
+        if (msg.contains("400") && msg.toLowerCase(Locale.ROOT).contains("sender")) {
+            return "Brevo error: Sender email not verified in Brevo. Verify your email in Brevo dashboard.";
+        }
         return msg;
     }
 
     private static Credentials loadCredentials() {
-        String email = System.getenv("GMAIL_ADDRESS");
-        String password = System.getenv("GMAIL_APP_PASSWORD");
-        if (email != null && !email.isBlank() && password != null && !password.isBlank()) {
-            return new Credentials(email.trim(), password.trim().replaceAll("\\s+", ""));
+        String brevoKey = System.getenv("BREVO_API_KEY");
+        String email = System.getenv("BREVO_SENDER_EMAIL");
+        if (email == null || email.isBlank()) {
+            email = System.getenv("GMAIL_ADDRESS");
         }
+        String password = System.getenv("GMAIL_APP_PASSWORD");
 
         Properties properties = new Properties();
         try (InputStream input = EmailOtpWebServer.class.getResourceAsStream("/config.properties")) {
@@ -332,16 +390,35 @@ public final class EmailOtpWebServer {
             }
         }
 
-        String propertyEmail = properties.getProperty("GMAIL_ADDRESS");
-        String propertyPassword = properties.getProperty("GMAIL_APP_PASSWORD");
-        if (propertyEmail == null || propertyEmail.isBlank()
-                || propertyPassword == null || propertyPassword.isBlank()) {
-            return null;
+        if (brevoKey == null || brevoKey.isBlank()) {
+            brevoKey = properties.getProperty("BREVO_API_KEY");
         }
-        return new Credentials(propertyEmail.trim(), propertyPassword.trim().replaceAll("\\s+", ""));
+        if (email == null || email.isBlank()) {
+            email = properties.getProperty("BREVO_SENDER_EMAIL");
+            if (email == null || email.isBlank()) {
+                email = properties.getProperty("GMAIL_ADDRESS");
+            }
+        }
+        if (password == null || password.isBlank()) {
+            password = properties.getProperty("GMAIL_APP_PASSWORD");
+        }
+
+        if (brevoKey != null && !brevoKey.isBlank()) {
+            return new Credentials(brevoKey.trim(), email != null ? email.trim() : null, null);
+        }
+
+        if (email != null && !email.isBlank() && password != null && !password.isBlank()) {
+            return new Credentials(null, email.trim(), password.trim().replaceAll("\\s+", ""));
+        }
+
+        return null;
     }
 
-    private record Credentials(String email, String password) {}
+    private record Credentials(String brevoApiKey, String email, String password) {
+        boolean isBrevo() {
+            return brevoApiKey != null && !brevoApiKey.isBlank();
+        }
+    }
 
     private static final class Challenge {
         private final String code;
