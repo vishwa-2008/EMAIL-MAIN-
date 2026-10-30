@@ -267,6 +267,48 @@ public final class EmailOtpWebServer {
         }
     }
 
+    private static String buildHtmlEmail(String code) {
+        return "<!DOCTYPE html>"
+                + "<html>"
+                + "<head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>"
+                + "<body style=\"margin:0;padding:0;background-color:#090d16;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">"
+                + "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background-color:#090d16;padding:36px 16px;\">"
+                + "<tr><td align=\"center\">"
+                + "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:560px;background-color:#111827;border-radius:18px;border:1px solid rgba(255,255,255,0.1);overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.6);\">"
+                + "<!-- Header Banner -->"
+                + "<tr><td style=\"background:linear-gradient(135deg,#2563eb,#10b981);padding:30px 28px;text-align:center;\">"
+                + "<div style=\"display:inline-block;background:rgba(255,255,255,0.22);padding:5px 14px;border-radius:20px;color:#ffffff;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;\">☕ JAVA MINI PROJECT</div>"
+                + "<h1 style=\"margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;\">EMAIL OTP AUTHENTICATION</h1>"
+                + "<div style=\"margin:8px 0 0;color:#fef08a;font-size:14px;font-weight:700;\">DONE BY TEAM 10 &bull; #CHINNI KRISHNA</div>"
+                + "</td></tr>"
+                + "<!-- Content Body -->"
+                + "<tr><td style=\"padding:32px 30px 20px;\">"
+                + "<h2 style=\"margin:0 0 10px;color:#f8fafc;font-size:18px;font-weight:700;\">Your One-Time Verification Code</h2>"
+                + "<p style=\"margin:0 0 24px;color:#94a3b8;font-size:14px;line-height:1.6;\">Use the secure 6-digit verification code below to verify your email address. This code is confidential and valid for <strong>5 minutes</strong>.</p>"
+                + "<!-- OTP Box -->"
+                + "<div style=\"background:#0f172a;border:2px dashed #3b82f6;border-radius:14px;padding:22px;text-align:center;margin:0 0 26px;\">"
+                + "<div style=\"color:#60a5fa;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;\">VERIFICATION CODE</div>"
+                + "<div style=\"font-size:40px;font-weight:900;color:#38bdf8;letter-spacing:10px;font-family:monospace;\">" + code + "</div>"
+                + "</div>"
+                + "<!-- Project Meta Details -->"
+                + "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:16px 20px;margin-bottom:22px;\">"
+                + "<tr><td style=\"padding:6px 0;color:#64748b;font-size:12px;\">Project:</td><td style=\"padding:6px 0;color:#e2e8f0;font-size:12px;font-weight:600;text-align:right;\">Java Mini Project</td></tr>"
+                + "<tr><td style=\"padding:6px 0;color:#64748b;font-size:12px;\">Team:</td><td style=\"padding:6px 0;color:#fbbf24;font-size:12px;font-weight:800;text-align:right;\">TEAM 10</td></tr>"
+                + "<tr><td style=\"padding:6px 0;color:#64748b;font-size:12px;\">Lead / Creator:</td><td style=\"padding:6px 0;color:#34d399;font-size:13px;font-weight:900;text-align:right;\">#CHINNI KRISHNA</td></tr>"
+                + "<tr><td style=\"padding:6px 0;color:#64748b;font-size:12px;\">Security:</td><td style=\"padding:6px 0;color:#94a3b8;font-size:12px;text-align:right;\">Java 17 &bull; SecureRandom OTP</td></tr>"
+                + "</table>"
+                + "<p style=\"margin:0;color:#64748b;font-size:12px;line-height:1.5;text-align:center;\">This is an automated security verification email. Please do not reply.</p>"
+                + "</td></tr>"
+                + "<!-- Footer -->"
+                + "<tr><td style=\"background:#090d16;border-top:1px solid #1e293b;padding:18px 24px;text-align:center;\">"
+                + "<p style=\"margin:0;color:#475569;font-size:11px;\">JAVA MINI PROJECT &bull; TEAM 10 &bull; #CHINNI KRISHNA &bull; ALL RIGHTS RESERVED</p>"
+                + "</td></tr>"
+                + "</table>"
+                + "</td></tr>"
+                + "</table>"
+                + "</body></html>";
+    }
+
     private static void sendBrevoEmail(String apiKey, String senderEmail, String recipient, String code) throws Exception {
         HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
@@ -276,18 +318,12 @@ public final class EmailOtpWebServer {
                 ? senderEmail.trim()
                 : "baddamvishwa445@gmail.com";
 
+        String htmlContent = buildHtmlEmail(code);
         String jsonPayload = "{"
-                + "\"sender\":{\"name\":\"Northstar Verification\",\"email\":\"" + jsonEscape(sender) + "\"},"
+                + "\"sender\":{\"name\":\"JAVA MINI PROJECT • TEAM 10 (#CHINNI KRISHNA)\",\"email\":\"" + jsonEscape(sender) + "\"},"
                 + "\"to\":[{\"email\":\"" + jsonEscape(recipient) + "\"}],"
-                + "\"subject\":\"Your verification code\","
-                + "\"htmlContent\":\"<div style=\\\"font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;border:1px solid #e2e8f0;border-radius:12px\\\">"
-                + "<h2 style=\\\"color:#194733;margin-top:0\\\">Your Verification Code</h2>"
-                + "<p style=\\\"font-size:15px;color:#334155\\\">Use the one-time code below to verify your email address:</p>"
-                + "<div style=\\\"font-size:32px;font-weight:bold;letter-spacing:6px;color:#245c43;padding:16px 0;text-align:center;background:#f0f7f3;border-radius:8px;margin:20px 0\\\">"
-                + jsonEscape(code)
-                + "</div>"
-                + "<p style=\\\"font-size:13px;color:#64748b\\\">This code is valid for 5 minutes. Do not share it with anyone.</p>"
-                + "</div>\""
+                + "\"subject\":\"🔐 " + code + " is your Java Mini Project OTP [Team 10 - #CHINNI KRISHNA]\","
+                + "\"htmlContent\":\"" + jsonEscape(htmlContent) + "\""
                 + "}";
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -336,13 +372,12 @@ public final class EmailOtpWebServer {
         });
 
         MimeMessage message = new MimeMessage(session);
-        message.setFrom(new InternetAddress(credentials.email(), "Secure Access"));
+        message.setFrom(new InternetAddress(credentials.email(), "JAVA MINI PROJECT • TEAM 10 (#CHINNI KRISHNA)"));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient, false));
-        message.setSubject("Your email verification code");
-        message.setText(
-                "Your one-time verification code is: " + code + "\n\n"
-                        + "This code is valid for 5 minutes. Do not share it with anyone.",
-                "UTF-8");
+        message.setSubject("🔐 " + code + " is your Java Mini Project OTP [Team 10 - #CHINNI KRISHNA]");
+        
+        String htmlContent = buildHtmlEmail(code);
+        message.setContent(htmlContent, "text/html; charset=utf-8");
         Transport.send(message);
     }
 
