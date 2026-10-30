@@ -349,11 +349,14 @@ public final class EmailOtpWebServer {
     private static String getFriendlyErrorMessage(Exception ex) {
         String msg = ex.getMessage();
         if (msg == null || msg.isBlank()) return ex.getClass().getSimpleName();
+        if (msg.toLowerCase(Locale.ROOT).contains("not verified")) {
+            return "Brevo account not activated: Check your Gmail inbox for Brevo account verification email.";
+        }
+        if (msg.contains("Key not found") || msg.contains("unauthorized") || msg.contains("401")) {
+            return "Brevo API key rejected: Ensure you copied the FULL key (not masked xkeysib-...***) from Brevo (SMTP & API > API Keys).";
+        }
         if (msg.contains("535-5.7.8") || msg.toLowerCase(Locale.ROOT).contains("username and password not accepted")) {
             return "Gmail authentication failed. Please verify your Google App Password.";
-        }
-        if (msg.toLowerCase(Locale.ROOT).contains("unauthorized") || msg.contains("401")) {
-            return "Brevo authentication failed. Check your BREVO_API_KEY in Render settings.";
         }
         if (msg.contains("400") && msg.toLowerCase(Locale.ROOT).contains("sender")) {
             return "Brevo error: Sender email not verified in Brevo. Verify your email in Brevo dashboard.";
@@ -404,7 +407,9 @@ public final class EmailOtpWebServer {
         }
 
         if (brevoKey != null && !brevoKey.isBlank()) {
-            return new Credentials(brevoKey.trim(), email != null ? email.trim() : null, null);
+            String sanitizedKey = brevoKey.trim().replaceAll("^[\"'`]|[\"'`]$", "").trim();
+            String sanitizedSender = email != null ? email.trim().replaceAll("^[\"'`]|[\"'`]$", "").trim() : null;
+            return new Credentials(sanitizedKey, sanitizedSender, null);
         }
 
         if (email != null && !email.isBlank() && password != null && !password.isBlank()) {
