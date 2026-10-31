@@ -31,3 +31,4 @@ if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" (
 )
 
 pause
+
